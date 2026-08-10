@@ -7,7 +7,7 @@
           "message"
         ],
         "additionalFields": {
-          "chatIds": "TU_CHAT_ID_TELEGRAM"
+          "chatIds": "={{ $env.TELEGRAM_CHAT_ID }}"
         }
       },
       "id": "4cd1f3dd-58e5-43c2-a927-af1ce727bfe3",
@@ -102,7 +102,7 @@
           "parameters": [
             {
               "name": "Authorization",
-              "value": "Bearer fc-TU_CLAVE_FIRECRAWL"
+              "value": "Bearer {{ $env.FIRECRAWL_API_KEY }}"
             }
           ]
         },
@@ -285,7 +285,7 @@
     },
     {
       "parameters": {
-        "person": "TU_LINKEDIN_PERSON_ID",
+        "person": "={{ $env.LINKEDIN_PERSON_ID }}",
         "text": "={{ $(\"Preparar publicación\").first().json.resumen }}\n\n👉 {{ $(\"Preparar publicación\").first().json.urlArticulo }}\n\n{{ $(\"Preparar publicación\").first().json.hashtags }}",
         "shareMediaCategory": "IMAGE",
         "additionalFields": {}

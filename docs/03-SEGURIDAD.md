@@ -25,15 +25,22 @@ Reemplazarla en el archivo **no** la invalida: hay que revocarla/regenerarla.
 
 ### 3. Usa buenas prácticas
 
-- Guarda los secretos en **credenciales de n8n** o variables de entorno, no hardcodeados.
+- Este repo **no contiene secretos**: los valores sensibles se leen con `{{ $env.* }}`
+  desde `.env` (ver [Parte 2 — Configuración](02-CONFIGURACION.md), paso 0). El archivo
+  `.env.example` solo tiene placeholders.
+- Los **tokens** (Telegram, LinkedIn OAuth, NVIDIA) se guardan en **credenciales nativas
+  de n8n**, no en el workflow ni en `.env`.
 - Importa el workflow y **reconecta las credenciales** en tu instancia (las referencias
   del archivo original apuntan a otra instalación).
 - Usa `.gitignore` para excluir `.env`, credenciales exportadas y datos locales de n8n.
+- En un futuro VPS: copia `.env` al servidor y levanta con `docker compose up -d`; las
+  mismas variables se exportan al contenedor sin tocar el workflow.
 
 ## Check-list rápida
 
 - [ ] Key de Firecrawl rotada (si alguna vez se expuso)
 - [ ] Sin secretos en el repo: revisa `Bearer, fc-, sk-, token, secret, api_key`
+- [ ] Los valores sensibles usan `{{ $env.* }}` y no valores literales en los nodos
 - [ ] Sin chat IDs, person IDs ni credential IDs reales
 - [ ] `instanceId` y webhooks anonimizados si el repo es público
 - [ ] `.gitignore` incluido y activo

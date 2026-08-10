@@ -5,6 +5,23 @@
 > Importa el archivo `⚡ LinkedIn Publisher.json` en tu instancia de n8n
 > (Workflows → Import from File) y sigue estos pasos **en orden**.
 
+## Paso 0 — Variables de entorno (secretos)
+
+El workflow **no hardcodea secretos**: los lee del entorno con `{{ $env.* }}`.
+
+1. Copia la plantilla: `cp .env.example .env`
+2. Llena los valores en `.env`:
+   - `FIRECRAWL_API_KEY` — tu key de Firecrawl (`fc-...`)
+   - `TELEGRAM_CHAT_ID` — tu chat ID (de [@userinfobot](https://t.me/userinfobot))
+   - `LINKEDIN_PERSON_ID` — el ID de tu perfil de LinkedIn (`urn:li:person:...`)
+3. Levanta o reinicia n8n para que cargue las variables:
+   - **Docker:** `docker compose up -d` (el `docker-compose.yml` incluye `env_file: .env`)
+   - **Instalación directa:** reinicia el proceso de n8n (las vars deben estar exportadas en el entorno)
+
+> `.env` está en `.gitignore`: nunca se sube al repo. Los **tokens** de Telegram,
+> LinkedIn y NVIDIA no van aquí: se guardan como credenciales nativas de n8n
+> (pasos siguientes).
+
 ## Paso 1 — Bot de Telegram
 
 1. Crea un bot con [@BotFather](https://t.me/BotFather): `/newbot`, asígnale un nombre.
