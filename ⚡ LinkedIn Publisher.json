@@ -1,0 +1,611 @@
+{
+  "name": "⚡ LinkedIn Publisher — Taveras Solutions (plantilla)",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {
+          "chatIds": "TU_CHAT_ID_TELEGRAM"
+        }
+      },
+      "id": "4cd1f3dd-58e5-43c2-a927-af1ce727bfe3",
+      "name": "Telegram: Recibir link",
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        -2160,
+        432
+      ],
+      "webhookId": "475ee534-0b7a-43d4-a722-d88171c24e6f",
+      "credentials": {
+        "telegramApi": {
+          "id": "TU_CRED_TELEGRAM_ID",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a-url",
+              "name": "url",
+              "value": "={{ ($json.message.text || \"\").split(/\\s+/).find(w => w.startsWith(\"http\")) || \"\" }}",
+              "type": "string"
+            },
+            {
+              "id": "a-notas",
+              "name": "notas",
+              "value": "={{ ($json.message.text || \"\").split(/\\s+/).filter(w => !w.startsWith(\"http\")).join(\" \").trim() }}",
+              "type": "string"
+            },
+            {
+              "id": "a-chat",
+              "name": "chatId",
+              "value": "={{ $json.message.chat.id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "f77b8447-ba80-47a1-aee2-9497adc9a7ab",
+      "name": "Extraer URL y notas",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1936,
+        432
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.url }}",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty"
+              },
+              "id": "1aa005d5-24e6-4461-ae00-888c3d7aa705"
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "9e6bdcd7-9768-4728-ae3c-75d108a9c284",
+      "name": "¿Trae link?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -1712,
+        432
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.firecrawl.dev/v1/scrape",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer fc-TU_CLAVE_FIRECRAWL"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ url: $json.url, formats: [\"markdown\"], onlyMainContent: true }) }}",
+        "options": {
+          "timeout": 90000
+        }
+      },
+      "id": "8d4a0754-123d-474c-971c-3362e7627b90",
+      "name": "Extraer artículo (Firecrawl)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -1504,
+        336
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=NOTAS DEL USUARIO (pueden estar vacías, si las hay respétalas como directriz principal): {{ $(\"Extraer URL y notas\").first().json.notas }}\n\nURL ORIGINAL: {{ $(\"Extraer URL y notas\").first().json.url }}\nTÍTULO ORIGINAL: {{ $json.data.metadata.title }}\n\nCONTENIDO DEL ARTÍCULO (markdown):\n{{ ($json.data.markdown || \"\").slice(0, 12000) }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "Eres el asistente editorial de JoelRD-01: Back-end Developer en herramientas de IA que crea contenido en español para audiencias en  LATAM. Tono cercano, directo, sin hype vacío. A partir del artículo que te pasen, genera SIEMPRE un JSON con estos campos:\n\n1. \"resumen_linkedin\": post para LinkedIn. Primera línea = hook fuerte (afirmación o dato, nunca \"¿Sabías que\" o un hook genérico). Luego 3-5 líneas con lo esencial del artículo en frases cortas, aportando un ángulo práctico para tu audiencia. Línea final: una invitación corta a leer el artículo completo, variando la fórmula (ej. \"Te dejo el artículo completo aquí:\" / \"El detalle completo, en el link:\"). NO escribas ninguna URL: el link del artículo se añade automáticamente después de tu última línea. Máximo 2 emojis. NO uses los caracteres <, > ni &.\n2. \"hashtags\": 3 a 5 hashtags relevantes en una sola línea.\n\nTodo en español. No inventes datos que no estén en el artículo."
+        }
+      },
+      "id": "7f682a1a-0d1d-4d17-9f88-3eae490b9c70",
+      "name": "Generar post (IA)",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        -1280,
+        336
+      ]
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{ \"resumen_linkedin\": \"Texto del post de LinkedIn listo para publicar\", \"hashtags\": \"#IA #Automatización #n8n\" }"
+      },
+      "id": "c74afb9c-f7be-4b6a-83b7-09f573415216",
+      "name": "Formato JSON",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        -1136,
+        544
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "p-resumen",
+              "name": "resumen",
+              "value": "={{ $json.output.resumen_linkedin }}",
+              "type": "string"
+            },
+            {
+              "id": "p-tags",
+              "name": "hashtags",
+              "value": "={{ $json.output.hashtags }}",
+              "type": "string"
+            },
+            {
+              "id": "p-url",
+              "name": "urlArticulo",
+              "value": "={{ $(\"Extraer URL y notas\").first().json.url }}",
+              "type": "string"
+            },
+            {
+              "id": "p-img",
+              "name": "imagen",
+              "value": "={{ $(\"Extraer artículo (Firecrawl)\").first().json.data.metadata.ogImage || $(\"Extraer artículo (Firecrawl)\").first().json.data.metadata[\"og:image\"] || \"\" }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "c798de74-1a8a-44f6-9156-ca687794d31a",
+      "name": "Preparar publicación",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -992,
+        336
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "sendAndWait",
+        "chatId": "={{ $(\"Extraer URL y notas\").first().json.chatId }}",
+        "message": "=📄 Propuesta para LinkedIn:\n\n{{ $json.resumen }}\n\n👉 {{ $json.urlArticulo }}\n\n{{ $json.hashtags }}\n\n¿Lo publico?",
+        "approvalOptions": {
+          "values": {
+            "approvalType": "double",
+            "approveLabel": "✅ Publicar",
+            "disapproveLabel": "❌ Cancelar"
+          }
+        },
+        "options": {
+          "limitWaitTime": {
+            "values": {
+              "resumeAmount": 12
+            }
+          },
+          "appendAttribution": false
+        }
+      },
+      "id": "e9074d9d-30fd-4c34-982c-bac02986b4c1",
+      "name": "Aprobar por Telegram",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -784,
+        336
+      ],
+      "webhookId": "60736586-7cf4-4252-98dd-94ad9ab57b4e",
+      "credentials": {
+        "telegramApi": {
+          "id": "TU_CRED_TELEGRAM_ID",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.data.approved }}",
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "a32c427c-e25c-420e-930e-befc140b15ee",
+      "name": "¿Aprobado?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -560,
+        336
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ $(\"Preparar publicación\").first().json.imagen || \"https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=1200&h=630&fit=crop&q=80\" }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          },
+          "timeout": 30000
+        }
+      },
+      "id": "5faef5bb-03f1-46b4-9a5e-3149463e3b56",
+      "name": "Descargar imagen",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -336,
+        224
+      ]
+    },
+    {
+      "parameters": {
+        "person": "TU_LINKEDIN_PERSON_ID",
+        "text": "={{ $(\"Preparar publicación\").first().json.resumen }}\n\n👉 {{ $(\"Preparar publicación\").first().json.urlArticulo }}\n\n{{ $(\"Preparar publicación\").first().json.hashtags }}",
+        "shareMediaCategory": "IMAGE",
+        "additionalFields": {}
+      },
+      "id": "1833ff46-d0ad-4edd-9e0b-9ce1095df1e3",
+      "name": "Publicar en LinkedIn",
+      "type": "n8n-nodes-base.linkedIn",
+      "typeVersion": 1,
+      "position": [
+        -112,
+        224
+      ],
+      "credentials": {
+        "linkedInOAuth2Api": {
+          "id": "TU_CRED_LINKEDIN_ID",
+          "name": "LinkedIn account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $(\"Extraer URL y notas\").first().json.chatId }}",
+        "text": "🚀 Publicado en LinkedIn.",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "id": "578576ec-96a0-4b7e-b8e9-16fdb743f309",
+      "name": "Confirmar publicado",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        112,
+        224
+      ],
+      "webhookId": "70301ad8-4585-402a-8fc7-b6d2f0d2ce57",
+      "credentials": {
+        "telegramApi": {
+          "id": "TU_CRED_TELEGRAM_ID",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $(\"Extraer URL y notas\").first().json.chatId }}",
+        "text": "❌ Cancelado: no publiqué nada.",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "id": "e2252b32-75ea-4b64-a7b9-250e202d3257",
+      "name": "Avisar cancelado",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -336,
+        512
+      ],
+      "webhookId": "6b23fc58-79ea-436c-9a3c-39931998ee9b",
+      "credentials": {
+        "telegramApi": {
+          "id": "TU_CRED_TELEGRAM_ID",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.chatId }}",
+        "text": "Mándame el link de una noticia o artículo (y si quieres, una nota del ángulo). Ejemplo:\n\nhttps://ejemplo.com/noticia enfócalo en agentes de IA",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "id": "0ee02280-694e-4f7d-b8c5-b18ff9d6cae3",
+      "name": "Pedir un link",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -1504,
+        608
+      ],
+      "webhookId": "1fa17082-fc43-44b4-a381-62793fd4084b",
+      "credentials": {
+        "telegramApi": {
+          "id": "TU_CRED_TELEGRAM_ID",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "# ⚡ LinkedIn Publisher\n## por Taveras Solutions\n\nMándale el link de una noticia a tu bot de Telegram → la IA escribe el post con tu estilo → apruebas con un botón → se publica en LinkedIn con imagen y el link del artículo.\n\n**Costo aprox: $0.05–0.10 por post** (solo la llamada de IA).\n\n🌐 eriktaveras.com · 📸 @eriktaveras\n👥 comunidad.eriktaveras.com",
+        "color": 4
+      },
+      "id": "92ff9355-bb0c-4c02-957c-7d0df8cad4d8",
+      "name": "Sticky Note 9d0893a3",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -1872,
+        -144
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 🔧 Configuración (en orden)\n\n**1. Bot de Telegram** — crea uno con @BotFather (/newbot), copia el token y créalo como credencial en los nodos de Telegram. Obtén tu chat ID escribiéndole a @userinfobot y pégalo en el trigger (restringe el bot solo a ti).\n\n**2. Firecrawl** — para extraer artículos. Opción A: self-hosted (gratis). Opción B: cloud en firecrawl.dev (agrega header \"Authorization: Bearer fc-...\" en el nodo).\n\n**3. OpenAI** — crea tu API key en platform.openai.com y conéctala en el nodo del modelo. Puedes usar gpt-5.4-mini para bajar el costo a ~$0.01/post.\n\n**4. LinkedIn** — en developer.linkedin.com crea una app, agrega los productos \"Share on LinkedIn\" y \"Sign In with LinkedIn using OpenID Connect\" (aprobación instantánea), registra la redirect URL que te muestra la credencial de n8n, y conecta. Luego selecciona tu perfil en el nodo de LinkedIn.\n\n**5. Personaliza el prompt** — abre \"Generar post (IA)\" y sustituye los [corchetes] del system message con tu nombre, tema y audiencia. Esto es lo que hace que suene a TI.\n\n**6. Activa el workflow** (toggle arriba a la derecha) y mándale un link al bot.",
+        "height": 528,
+        "width": 224,
+        "color": 5
+      },
+      "id": "1589e42a-409f-491d-8603-d91e39e6fff0",
+      "name": "Sticky Note 5fbeee42",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -1616,
+        -512
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 🧍 Human in the loop\n\nLa IA NUNCA publica sin tu aprobación: el bot te manda la propuesta con botones ✅/❌ y espera hasta 12 horas. Si no respondes, se cancela solo.\n\nConsejo: usa esto para curaduría con cadencia. Tu opinión personal escríbela tú — eso es lo que construye tu marca.",
+        "height": 352,
+        "color": 7
+      },
+      "id": "fcc68bb4-f6f3-4614-bf0e-65143de9c4f1",
+      "name": "Sticky Note ab066270",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -1872,
+        -512
+      ]
+    },
+    {
+      "parameters": {
+        "model": "nvidia/nemotron-nano-12b-v2-vl",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatNvidia",
+      "typeVersion": 1,
+      "position": [
+        -1280,
+        560
+      ],
+      "id": "b2e3d306-fa0a-4fb3-aa91-f15bcafa0248",
+      "name": "NVIDIA Nemotron Chat Model",
+      "credentials": {
+        "nvidiaApi": {
+          "id": "TU_CRED_NVIDIA_ID",
+          "name": "NVIDIA Nemotron account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Telegram: Recibir link": {
+      "main": [
+        [
+          {
+            "node": "Extraer URL y notas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extraer URL y notas": {
+      "main": [
+        [
+          {
+            "node": "¿Trae link?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Trae link?": {
+      "main": [
+        [
+          {
+            "node": "Extraer artículo (Firecrawl)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Pedir un link",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extraer artículo (Firecrawl)": {
+      "main": [
+        [
+          {
+            "node": "Generar post (IA)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generar post (IA)": {
+      "main": [
+        [
+          {
+            "node": "Preparar publicación",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Formato JSON": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Generar post (IA)",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Preparar publicación": {
+      "main": [
+        [
+          {
+            "node": "Aprobar por Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aprobar por Telegram": {
+      "main": [
+        [
+          {
+            "node": "¿Aprobado?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Aprobado?": {
+      "main": [
+        [
+          {
+            "node": "Descargar imagen",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Avisar cancelado",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Descargar imagen": {
+      "main": [
+        [
+          {
+            "node": "Publicar en LinkedIn",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Publicar en LinkedIn": {
+      "main": [
+        [
+          {
+            "node": "Confirmar publicado",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "NVIDIA Nemotron Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Generar post (IA)",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false,
+    "timeSavedMode": "fixed",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "versionId": "f69fc639-44fb-4075-84a4-ee67f8039cb9",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "TU_INSTANCE_ID"
+  },
+  "nodeGroups": [],
+  "id": "bvAqV5CRKk92F1tH",
+  "tags": []
+}

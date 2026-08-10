@@ -1,0 +1,28 @@
+# Dependencias
+node_modules/
+
+# Entorno y secretos
+.env
+.env.*
+*.pem
+*.key
+credentials*
+*credentials*.json
+
+# Datos locales de n8n
+.n8n/
+data/
+*.sqlite
+
+# Exportaciones y backups
+*.backup
+*.bak
+
+# Editor / SO
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Logs
+*.log
