@@ -12,8 +12,10 @@ El workflow **no hardcodea secretos**: los lee del entorno con `{{ $env.* }}`.
 1. Copia la plantilla: `cp .env.example .env`
 2. Llena los valores en `.env`:
    - `FIRECRAWL_API_KEY` — tu key de Firecrawl (`fc-...`)
+   - `FIRECRAWL_BASE_URL` — URL de la API de Firecrawl (cloud: `https://api.firecrawl.dev/v1/scrape`; cámbiala si usas self-hosted)
    - `TELEGRAM_CHAT_ID` — tu chat ID (de [@userinfobot](https://t.me/userinfobot))
    - `LINKEDIN_PERSON_ID` — el ID de tu perfil de LinkedIn (`urn:li:person:...`)
+   - `EDITORIAL_PERSONA` — tu perfil editorial: nombre/handle, rol, tema y audiencia (lo usa la IA)
 3. Levanta o reinicia n8n para que cargue las variables:
    - **Docker:** `docker compose up -d` (el `docker-compose.yml` incluye `env_file: .env`)
    - **Instalación directa:** reinicia el proceso de n8n (las vars deben estar exportadas en el entorno)
@@ -28,23 +30,19 @@ El workflow **no hardcodea secretos**: los lee del entorno con `{{ $env.* }}`.
 2. Copia el **token** que te da BotFather.
 3. En n8n, crea una credencial de **Telegram API** y pega el token.
 4. Obtén tu **chat ID** escribiéndole a [@userinfobot](https://t.me/userinfobot).
-5. Pega ese chat ID en el nodo **Telegram: Recibir link** → `chatIds`.
+5. Pega ese chat ID en tu `.env` (`TELEGRAM_CHAT_ID`).
 6. **Recomendado:** restringe el bot para que solo tú puedas usarlo.
 
 ## Paso 2 — Firecrawl (extracción de artículos)
 
 Tienes dos opciones:
 
-- **Opción A — Self-hosted (gratis):** aloja Firecrawl en tu propio servidor y
-  apunta el nodo a tu instancia.
+- **Opción A — Self-hosted (gratis):** aloja Firecrawl en tu propio servidor y apunta
+  `FIRECRAWL_BASE_URL` en `.env` a tu instancia.
 - **Opción B — Cloud (recomendada):** crea cuenta en [firecrawl.dev](https://firecrawl.dev)
-  y genera una API key.
+  y genera una API key. La URL `https://api.firecrawl.dev/v1/scrape` ya viene por defecto en `.env`.
 
-En el nodo **Extraer artículo (Firecrawl)** agrega el header:
-
-```
-Authorization: Bearer fc-TU_CLAVE_FIRECRAWL
-```
+La key y la URL se leen de `.env` (`FIRECRAWL_API_KEY` / `FIRECRAWL_BASE_URL`); no hace falta tocar el nodo.
 
 > ⚠️ **Seguridad:** usa tu propia key y nunca la publiques ni la subas a un repo
 > público. Detalles en la [Parte 3 — Seguridad](03-SEGURIDAD.md).
@@ -69,11 +67,10 @@ El workflow viene conectado al modelo **NVIDIA Nemotron** (`nvidia/nemotron-nano
 
 ## Paso 5 — Personaliza el prompt (haz que suene a TI)
 
-Abre el nodo **Generar post (IA)** y edita el **system message**:
+Edita `EDITORIAL_PERSONA` en tu `.env` con tu nombre/handle, tu tema y tu audiencia:
 
-- Sustituye el perfil editorial por el tuyo: tu nombre, tu tema y tu audiencia.
-- El prompt actual está pensado para un tono cercano y directo, sin hype vacío,
-  dirigido a audiencias LATAM.
+- Ejemplo: `EDITORIAL_PERSONA=Tu-nombre: Back-end Developer, contenido en español para LATAM`.
+- El prompt base ya está pensado para un tono cercano y directo, sin hype vacío.
 - Esto es lo que más impacto tiene en que el post suene como tuyo.
 
 ## Paso 6 — Activa el workflow

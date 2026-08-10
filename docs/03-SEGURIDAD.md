@@ -21,6 +21,7 @@ Reemplazarla en el archivo **no** la invalida: hay que revocarla/regenerarla.
 | Credential IDs de n8n | IDs internos de credenciales exportadas |
 | Chat IDs personales de Telegram | tu ID de usuario |
 | LinkedIn person IDs | el ID de tu perfil |
+| Identidad/persona editorial | tu nombre o handle en `EDITORIAL_PERSONA` |
 | `instanceId` de tu instalación n8n | identificador de tu instancia |
 
 ### 3. Usa buenas prácticas
@@ -42,6 +43,7 @@ Reemplazarla en el archivo **no** la invalida: hay que revocarla/regenerarla.
 - [ ] Sin secretos en el repo: revisa `Bearer, fc-, sk-, token, secret, api_key`
 - [ ] Los valores sensibles usan `{{ $env.* }}` y no valores literales en los nodos
 - [ ] Sin chat IDs, person IDs ni credential IDs reales
+- [ ] `EDITORIAL_PERSONA` sin tu nombre real si el repo es público
 - [ ] `instanceId` y webhooks anonimizados si el repo es público
 - [ ] `.gitignore` incluido y activo
 

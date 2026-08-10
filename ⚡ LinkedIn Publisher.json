@@ -96,7 +96,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://api.firecrawl.dev/v1/scrape",
+        "url": "={{ $env.FIRECRAWL_BASE_URL }}",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -128,7 +128,7 @@
         "text": "=NOTAS DEL USUARIO (pueden estar vacías, si las hay respétalas como directriz principal): {{ $(\"Extraer URL y notas\").first().json.notas }}\n\nURL ORIGINAL: {{ $(\"Extraer URL y notas\").first().json.url }}\nTÍTULO ORIGINAL: {{ $json.data.metadata.title }}\n\nCONTENIDO DEL ARTÍCULO (markdown):\n{{ ($json.data.markdown || \"\").slice(0, 12000) }}",
         "hasOutputParser": true,
         "options": {
-          "systemMessage": "Eres el asistente editorial de JoelRD-01: Back-end Developer en herramientas de IA que crea contenido en español para audiencias en  LATAM. Tono cercano, directo, sin hype vacío. A partir del artículo que te pasen, genera SIEMPRE un JSON con estos campos:\n\n1. \"resumen_linkedin\": post para LinkedIn. Primera línea = hook fuerte (afirmación o dato, nunca \"¿Sabías que\" o un hook genérico). Luego 3-5 líneas con lo esencial del artículo en frases cortas, aportando un ángulo práctico para tu audiencia. Línea final: una invitación corta a leer el artículo completo, variando la fórmula (ej. \"Te dejo el artículo completo aquí:\" / \"El detalle completo, en el link:\"). NO escribas ninguna URL: el link del artículo se añade automáticamente después de tu última línea. Máximo 2 emojis. NO uses los caracteres <, > ni &.\n2. \"hashtags\": 3 a 5 hashtags relevantes en una sola línea.\n\nTodo en español. No inventes datos que no estén en el artículo."
+          "systemMessage": "=Eres el asistente editorial de {{ $env.EDITORIAL_PERSONA }}. Tono cercano, directo, sin hype vacío. A partir del artículo que te pasen, genera SIEMPRE un JSON con estos campos:\n\n1. \"resumen_linkedin\": post para LinkedIn. Primera línea = hook fuerte (afirmación o dato, nunca \"¿Sabías que\" o un hook genérico). Luego 3-5 líneas con lo esencial del artículo en frases cortas, aportando un ángulo práctico para tu audiencia. Línea final: una invitación corta a leer el artículo completo, variando la fórmula (ej. \"Te dejo el artículo completo aquí:\" / \"El detalle completo, en el link:\"). NO escribas ninguna URL: el link del artículo se añade automáticamente después de tu última línea. Máximo 2 emojis. NO uses los caracteres <, > ni &.\n2. \"hashtags\": 3 a 5 hashtags relevantes en una sola línea.\n\nTodo en español. No inventes datos que no estén en el artículo."
         }
       },
       "id": "7f682a1a-0d1d-4d17-9f88-3eae490b9c70",
@@ -393,7 +393,7 @@
     },
     {
       "parameters": {
-        "content": "## 🔧 Configuración (en orden)\n\n**1. Bot de Telegram** — crea uno con @BotFather (/newbot), copia el token y créalo como credencial en los nodos de Telegram. Obtén tu chat ID escribiéndole a @userinfobot y pégalo en el trigger (restringe el bot solo a ti).\n\n**2. Firecrawl** — para extraer artículos. Opción A: self-hosted (gratis). Opción B: cloud en firecrawl.dev (agrega header \"Authorization: Bearer fc-...\" en el nodo).\n\n**3. OpenAI** — crea tu API key en platform.openai.com y conéctala en el nodo del modelo. Puedes usar gpt-5.4-mini para bajar el costo a ~$0.01/post.\n\n**4. LinkedIn** — en developer.linkedin.com crea una app, agrega los productos \"Share on LinkedIn\" y \"Sign In with LinkedIn using OpenID Connect\" (aprobación instantánea), registra la redirect URL que te muestra la credencial de n8n, y conecta. Luego selecciona tu perfil en el nodo de LinkedIn.\n\n**5. Personaliza el prompt** — abre \"Generar post (IA)\" y sustituye los [corchetes] del system message con tu nombre, tema y audiencia. Esto es lo que hace que suene a TI.\n\n**6. Activa el workflow** (toggle arriba a la derecha) y mándale un link al bot.",
+        "content": "## 🔧 Configuración (en orden)\n\n**1. Bot de Telegram** — crea uno con @BotFather (/newbot), copia el token y créalo como credencial en los nodos de Telegram. Obtén tu chat ID escribiéndole a @userinfobot y pégalo en tu `.env` (`TELEGRAM_CHAT_ID`).\n\n**2. Firecrawl** — para extraer artículos. Opción A: self-hosted (gratis). Opción B: cloud en firecrawl.dev. Configura `FIRECRAWL_API_KEY` y `FIRECRAWL_BASE_URL` en tu `.env`.\n\n**3. OpenAI** — crea tu API key en platform.openai.com y conéctala en el nodo del modelo. Puedes usar gpt-5.4-mini para bajar el costo a ~$0.01/post.\n\n**4. LinkedIn** — en developer.linkedin.com crea una app, agrega los productos \"Share on LinkedIn\" y \"Sign In with LinkedIn using OpenID Connect\" (aprobación instantánea), registra la redirect URL que te muestra la credencial de n8n, y conecta. Luego selecciona tu perfil en el nodo de LinkedIn.\n\n**5. Personaliza el prompt** — edita `EDITORIAL_PERSONA` en tu `.env` con tu nombre, tema y audiencia. Esto es lo que hace que suene a TI.\n\n**6. Activa el workflow** (toggle arriba a la derecha) y mándale un link al bot.",
         "height": 528,
         "width": 224,
         "color": 5
