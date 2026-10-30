@@ -1,0 +1,7 @@
+# Placeholders de documentación y plantillas, no secretos reales.
+[allowlist]
+paths = [
+  '''\.env\.example''',
+  '''README\.md''',
+  '''docs/''',
+]

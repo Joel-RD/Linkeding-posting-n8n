@@ -1,0 +1,28 @@
+name: Validate workflow
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Validate workflow JSON and graph
+        run: node scripts/validate-workflow.mjs
+
+      # gitleaks-action es gratis para repos públicos. Si el repo es privado,
+      # añade GITLEAKS_LICENSE a los secrets o usa la CLI de gitleaks.
+      - name: Scan for secrets
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

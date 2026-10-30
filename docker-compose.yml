@@ -1,11 +1,18 @@
 services:
   n8n:
-    image: n8nio/n8n
+    # Versión fijada para que un redeploy no rompa el workflow por sorpresa.
+    # Actualiza de forma consciente y haz backup del volumen antes.
+    image: n8nio/n8n:2.45.7
     container_name: n8n
     restart: unless-stopped
     env_file: .env
+    # Solo accesible desde el host: ponlo detrás de Caddy/Nginx/Traefik con HTTPS.
+    # Si quieres exponerlo directamente, cambia a "5678:5678" y configura TLS.
     ports:
-      - "5678:5678"
+      - "127.0.0.1:5678:5678"
+    # Permite que n8n (en Docker) llegue a un Firecrawl self-hosted en el host.
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     volumes:
       - n8n_data:/home/node/.n8n
 

@@ -1,0 +1,10 @@
+# Copia este archivo a /etc/caddy/Caddyfile (o al Caddyfile de tu proyecto),
+# cambia el dominio y recarga Caddy. Caddy obtiene el certificado TLS solo.
+#
+# Requisito: n8n escucha en 127.0.0.1:5678 (docker-compose.yml).
+# Si Caddy corre en Docker, usa el nombre del servicio n8n y una red compartida
+# en lugar de 127.0.0.1.
+
+n8n.tudominio.com {
+    reverse_proxy 127.0.0.1:5678
+}

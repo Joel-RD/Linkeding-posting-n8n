@@ -8,12 +8,20 @@ node_modules/
 *.pem
 *.key
 credentials*
-*credentials*.json
+*[Cc]redentials*.json
+*[Cc]redentials*.yaml
+*[Cc]redentials*.yml
 
 # Datos locales de n8n
 .n8n/
 data/
 *.sqlite
+*.sqlite-journal
+
+# Caddy local (el ejemplo sí se versiona)
+Caddyfile
+caddy_data/
+caddy_config/
 
 # Exportaciones y backups
 *.backup
